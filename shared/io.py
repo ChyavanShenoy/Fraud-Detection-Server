@@ -21,3 +21,5 @@ def get_files(url, dest):
 def delete_files(folder):
     for data in glob.glob(folder+'/*.*'):
         os.remove(data)
+
+# get_files('http://192.168.29.226:9000/', './Temp')

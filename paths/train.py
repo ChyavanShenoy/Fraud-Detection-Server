@@ -22,6 +22,7 @@ from keras.callbacks import EarlyStopping
 import pickle
 from keras.models import Model
 import glob
+import tensorflow as tf
 
 SIZE = 224
 BATCH_SIZE = 64
@@ -52,12 +53,6 @@ def fetch_data():
     global test_labels
     for i in os.listdir(train_dir):
         for j in os.listdir(os.path.join(train_dir, i)):
-            # img = cv2.imread(os.path.join(train_dir, i, j))
-            # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            # img = cv2.resize(img, (SIZE, SIZE))
-            # train_data.append(img)
-            # train_labels.append(i)
-
             train_data_names.append(j)
             img = cv2.imread(j)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -66,12 +61,6 @@ def fetch_data():
 
     for i in os.listdir(test_dir):
         for j in os.listdir(os.path.join(test_dir, i)):
-            # img = cv2.imread(os.path.join(test_dir, i, j))
-            # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            # img = cv2.resize(img, (SIZE, SIZE))
-            # test_data.append(img)
-            # test_labels.append(i)
-
             test_data_names.append(j)
             img = cv2.imread(j)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -179,7 +168,7 @@ def train_with_image(path):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = cv2.resize(img, (SIZE, SIZE))
         train_data.append(img)
-        if per[-1]=='g':
+        if per[-1] == 'g':
             train_labels.append(np.array(1))
         else:
             train_labels.append(np.array(0))
@@ -189,7 +178,7 @@ def train_with_image(path):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = cv2.resize(img, (SIZE, SIZE))
         test_data.append([img])
-        if per[-1]=='g':
+        if per[-1] == 'g':
             test_labels.append(np.array(1))
         else:
             test_labels.append(np.array(0))
@@ -202,39 +191,21 @@ def train_with_image(path):
 
     test_labels = np.array(test_labels)
 
-    print('=========================================================')
-    print("Converted to numpy array")
-    print('=========================================================')
-
     train_labels = to_categorical(train_labels)
     test_labels = to_categorical(test_labels)
 
     # Resizing the images
     train_data = train_data.reshape(-1, SIZE, SIZE, 3)
     test_data = test_data.reshape(-1, SIZE, SIZE, 3)
-
-    print("=====================================================================")
-    print(F"\nTrain data shape: {train_data.shape}")
-    print("=====================================================================")
-    print(F"\nTest data shape: {test_data.shape}")
-    print("=====================================================================")
-    print(F"\nTrain data array: {train_data}")
-    print("=====================================================================")
-    print(F"\nTest data array: {test_data}")
-    print("=====================================================================")
-
-    # convert the data into numpy array
-    # train_data = np.array(train_data)
-    # train_data = train_data.reshape(-1, SIZE, SIZE, 3)
-    # test_data = np.array(test_data)
-    # test_data = test_data.reshape(-1, SIZE, SIZE, 3)
     print("Test and train data converted to numpy array")
 
     # Train the model
+    print("Training the model")
     base_model = applications.ResNet50(
         weights='imagenet', include_top=False, input_shape=input_)
     model = Sequential()
-    data_augmentation = keras.Sequential([layers.experimental.preprocessing.RandomRotation(0.1)])
+    data_augmentation = keras.Sequential(
+        [layers.experimental.preprocessing.RandomRotation(0.1)])
     model.add(base_model)
     model.add(Flatten(input_shape=base_model.output_shape[1:]))
     model.add(Dense(256, activation='relu'))
