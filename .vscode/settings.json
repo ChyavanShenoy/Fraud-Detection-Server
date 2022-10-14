@@ -5,7 +5,22 @@
         "**/.hg": true,
         "**/CVS": true,
         "**/.DS_Store": true,
-        "**/Thumbs.db": true
+        "**/Thumbs.db": true,
+        "__pycache__": true,
+        ".vscode": true,
+        "models": true,
+        "paths/__pycache__": true,
+        "shared/__pycache__": true,
+        ".gitignore": true,
+        ".gitattributes": true
     },
-    "hide-files.files": []
+    "hide-files.files": [
+        "__pycache__",
+        ".vscode",
+        "models",
+        "paths/__pycache__",
+        "shared/__pycache__",
+        ".gitignore",
+        ".gitattributes"
+    ]
 }

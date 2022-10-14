@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from paths import classify, register
 from tensorflow.keras.models import load_model
 from start_up_functions import check_models
+from shared.io import delete_files
 
 app = FastAPI()
 
@@ -20,6 +21,8 @@ class ImgLoc(BaseModel):
 
 @app.on_event("startup")
 async def startup_event():
+    delete_files("./temp/test")
+    delete_files("./temp/train")
     if not check_models():
         # register()
         pass
@@ -42,3 +45,9 @@ def classify_image(image_location: ImgLoc = Body(embed=True)):
 @app.post("/register")
 def register_image(image_location: ImgLoc = Body(embed=True)):
     return register.main(image_location['image_path'])
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    delete_files("./temp/test")
+    delete_files("./temp/train")
