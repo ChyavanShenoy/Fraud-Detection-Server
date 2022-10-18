@@ -21,8 +21,8 @@ class ImgLoc(BaseModel):
 
 @app.on_event("startup")
 async def startup_event():
-    delete_files("./temp/test")
-    delete_files("./temp/train")
+    delete_files("./temp/test/genuine/")
+    delete_files("./temp/train/genuine/")
     if not check_models():
         # register()
         pass
@@ -49,5 +49,5 @@ def register_image(image_location: ImgLoc = Body(embed=True)):
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    delete_files("./temp/test")
-    delete_files("./temp/train")
+    delete_files("./temp/test/genuine/")
+    delete_files("./temp/train/genuine/")

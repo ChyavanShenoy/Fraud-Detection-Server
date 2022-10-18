@@ -1,10 +1,9 @@
-import sqlite3
 import os
 from shared.io import get_files, delete_files
 from .train import train_with_image
 from tensorflow.keras.models import load_model
 
-TRAIN_PATH = './temp/train'
+TRAIN_PATH = './temp/train/genuine'
 MODEL_PATH = './models/'
 MODEL_NAME = 'model.h5'
 

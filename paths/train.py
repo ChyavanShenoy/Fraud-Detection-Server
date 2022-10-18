@@ -1,31 +1,30 @@
-from gc import callbacks
-from matplotlib import test
-from matplotlib.dates import MO
+import glob
+import os
+import pickle
+import shutil
+
+import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
 import sklearn.svm as svm
-import os
-import cv2
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras import applications
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras import Sequential
-from keras.models import Sequential, Model, load_model
-from keras import applications
-from keras import optimizers
-from keras.layers import Flatten, Dense
-from sklearn.metrics import accuracy_score
+from keras import applications, optimizers
 from keras.callbacks import EarlyStopping
-import pickle
-from keras.models import Model
-import glob
+from keras.layers import Dense, Flatten
+from keras.models import Model, Sequential, load_model
+from matplotlib import test
+from matplotlib.dates import MO
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from tensorflow import keras
+from tensorflow.keras import Sequential, applications, layers
+from tensorflow.keras.utils import to_categorical
+
+from shared.io import delete_files
 
 SIZE = 224
 BATCH_SIZE = 64
-EPOCHS = 50
+EPOCHS = 20
 input_ = (SIZE, SIZE, 3)
 output_ = 2
 MODEL_PATH = './models/model.h5'
@@ -166,75 +165,71 @@ def train_with_image(path):
     global test_data
     global train_labels
     global test_labels
+    global test_data_names
+    global train_data_names
     # fetch all files from the path
     files = glob.glob(path + '/*')
 
     # divide the files into train and test
-    train_data_names = files[:int(len(files) * 0.8)]
-    test_data_names = files[int(len(files) * 0.2):]
+    train_data_files = files[:int(len(files) * 0.2)]
+    test_data_files = files[int(len(files) * 0.8):]
 
     # load the images
-    for per in train_data_names:
+    for per in train_data_files:
         img = cv2.imread(per)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = cv2.resize(img, (SIZE, SIZE))
-        train_data.append(img)
-        if per[-1]=='g':
-            train_labels.append(np.array(1))
-        else:
-            train_labels.append(np.array(0))
+        train_data.append([img])
+        # Assign genuine label to the image
+        # train_labels.append(np.array(0))
 
-    for per in test_data_names:
+    train_data = np.array(train_data)/255.0
+    train_labels = np.array(train_labels)
+
+    for per in test_data_files:
         img = cv2.imread(per)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = cv2.resize(img, (SIZE, SIZE))
         test_data.append([img])
-        if per[-1]=='g':
-            test_labels.append(np.array(1))
-        else:
-            test_labels.append(np.array(0))
+        # Assign genuine label to the image
+        # test_labels.append(np.array(0))
 
     print("Data reading complete")
-    train_data = np.array(train_data)/255.0
 
     test_data = np.array(test_data)/255.0
-    train_labels = np.array(train_labels)
-
     test_labels = np.array(test_labels)
 
     print('=========================================================')
     print("Converted to numpy array")
     print('=========================================================')
+    print(F"\nTest Data: {test_data.shape}")
+    print("=========================================================")
+    # print(F"\nTest Labels: {test_labels}")
+    print("=========================================================")
+    print(F"\nTrain Data: {train_data.shape}")
+    print("=========================================================")
+    # print(F"\nTrain Labels: {train_labels}")
+    print("=========================================================")
 
     train_labels = to_categorical(train_labels)
     test_labels = to_categorical(test_labels)
+
+    print('=========================================================')
+    print("Converted to categorical")
+    print('=========================================================')
 
     # Resizing the images
     train_data = train_data.reshape(-1, SIZE, SIZE, 3)
     test_data = test_data.reshape(-1, SIZE, SIZE, 3)
 
-    print("=====================================================================")
-    print(F"\nTrain data shape: {train_data.shape}")
-    print("=====================================================================")
-    print(F"\nTest data shape: {test_data.shape}")
-    print("=====================================================================")
-    print(F"\nTrain data array: {train_data}")
-    print("=====================================================================")
-    print(F"\nTest data array: {test_data}")
-    print("=====================================================================")
-
-    # convert the data into numpy array
-    # train_data = np.array(train_data)
-    # train_data = train_data.reshape(-1, SIZE, SIZE, 3)
-    # test_data = np.array(test_data)
-    # test_data = test_data.reshape(-1, SIZE, SIZE, 3)
     print("Test and train data converted to numpy array")
 
     # Train the model
     base_model = applications.ResNet50(
         weights='imagenet', include_top=False, input_shape=input_)
     model = Sequential()
-    data_augmentation = keras.Sequential([layers.experimental.preprocessing.RandomRotation(0.1)])
+    data_augmentation = keras.Sequential(
+        [layers.experimental.preprocessing.RandomRotation(0.1)])
     model.add(base_model)
     model.add(Flatten(input_shape=base_model.output_shape[1:]))
     model.add(Dense(256, activation='relu'))
@@ -256,7 +251,26 @@ def train_with_image(path):
     val_loss = progess.history['val_loss']
     epochs = range(len(acc))
 
+    # plt.plot(epochs, loss, 'b', label='Training loss')
+    # plt.plot(epochs, val_loss, 'r', label='Validation loss')
+    # plt.title('Training and validation loss')
+    # plt.legend()
+    # plt.figure()
+    # plt.show()
+    # plt.imsave('./models/loss.png', plt)
+    # plt.savefig('./models/loss.png')
+
     # Save the model
     model.save('./models/model.h5')
+    print("New Model saved")
+
+    # Evaluate the model
+    score = model.evaluate(test_data, test_labels, verbose=0)
+    print('Test loss:', score[0])
+    print('Test accuracy:', score[1])
+
+    # Delete the files from test and train
+    delete_files("./temp/train/genuine")
+    delete_files("./temp/test/genuine")
 
     # Plot the accuracy and loss

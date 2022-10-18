@@ -12,4 +12,4 @@ def check_models():
         print("Model does not exist, training model from database")
         train.train_model()
     else:
-        print("Model exist")
+        print("Model exists")

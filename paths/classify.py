@@ -1,10 +1,11 @@
-import cv2
-import numpy as np
 import glob
-from tensorflow.keras.models import load_model
-from shared import get_files, delete_files
 import os
 
+import cv2
+import numpy as np
+from tensorflow.keras.models import load_model
+
+from shared import delete_files, get_files
 
 SIZE = 224
 TESTCLASSIFY = './temp/test'
